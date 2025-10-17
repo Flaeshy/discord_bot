@@ -10,32 +10,41 @@ DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1428805748410028114/sWRn_MDp
 def gitlab_to_discord():
     data = request.json
 
-    # Make sure this is an issue event
+    # Sicherstellen, dass es ein Issue Event ist
     if data.get("object_kind") != "issue":
         return "Not an issue event", 200
 
     issue = data.get("object_attributes", {})
     title = issue.get("title", "No title")
     url = issue.get("url", "")
-    labels = [label.get("title") for label in issue.get("labels", [])]
 
-    # Only send message if status is "Ready for Review"
-    if "Ready for Review" not in labels:
-        return "Status not Ready for Review", 200
+    # Prüfen, ob der Status sich auf "Ready for Review" geändert hat
+    changes = data.get("changes", {})
+    status_change = changes.get("status", {})  # GitLab liefert alte/neue Werte in changes.status
 
-    # Construct Discord message
+    if not status_change:
+        return "No status change", 200
+
+    new_status = status_change.get("current")  # neuer Status
+    old_status = status_change.get("previous")  # alter Status
+
+    if new_status != "Ready for Review":
+        return f"Status changed to {new_status}, not Ready for Review", 200
+
+    # Nachricht an Discord erstellen
     msg = {
         "embeds": [{
             "title": f"📝 Issue Ready for Review: {title}",
             "description": f"[View Issue]({url})",
             "color": 0x00FF00,
             "fields": [
-                {"name": "Status", "value": "Ready for Review", "inline": True}
+                {"name": "Status", "value": "Ready for Review", "inline": True},
+                {"name": "Previous Status", "value": old_status, "inline": True}
             ]
         }]
     }
 
-    # Send to Discord
+    # Nachricht senden
     requests.post(DISCORD_WEBHOOK, json=msg)
     return "OK", 200
 
