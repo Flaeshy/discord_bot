@@ -4,7 +4,7 @@ import requests
 app = Flask(__name__)
 
 # Provide your Discord webhook URL here manually
-DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1427723602572218670/QgTpBlDHEVowyqPI9VUtxhc1fef_faKRdmdX4mtAK7BlgUoZlstaIXM4fKYk9X9Vq_MH"
+DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1428805748410028114/sWRn_MDpqOIHNnaJN2xzQ_E46x_nQr1KN97gvyd395XdbXsBXeWGJIKAroGoJDh4ttkY"
 
 @app.route("/gitlab", methods=["POST"])
 def gitlab_to_discord():
