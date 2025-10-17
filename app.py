@@ -28,7 +28,7 @@ def gitlab_to_discord():
     new_status = status_change.get("current")  # neuer Status
     old_status = status_change.get("previous")  # alter Status
 
-    if new_status != "Ready for Review":
+    if "Ready for Review" not in new_status:
         return f"Status changed to {new_status}, not Ready for Review", 200
 
     # Nachricht an Discord erstellen
