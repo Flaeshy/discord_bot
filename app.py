@@ -33,8 +33,9 @@ def gitlab_to_discord():
 
         # Nachricht an Discord erstellen
         msg = {
+            "content": "@everyone",
             "embeds": [{
-                "title": f"📝 @everyone Issue Ready for Review: {title}",
+                "title": f"📝 Issue Ready for Review: {title}",
                 "description": f"[View Issue]({url})",
                 "color": 0x00FF00,
                 "fields": [
