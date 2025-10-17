@@ -6,6 +6,8 @@ app = Flask(__name__)
 # Provide your Discord webhook URL here manually
 DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1428805748410028114/sWRn_MDpqOIHNnaJN2xzQ_E46x_nQr1KN97gvyd395XdbXsBXeWGJIKAroGoJDh4ttkY"
 
+relative_positions = [12825, 12312, 11799, 11286, 10773, 10260, 9747, 9234, 8721, 8465]
+
 @app.route("/gitlab", methods=["POST"])
 def gitlab_to_discord():
     data = request.json
@@ -24,13 +26,34 @@ def gitlab_to_discord():
 
     if not status_change:
         return "No status change", 200
+    else:
+        new_status = status_change.get("current").get("name")  # neuer Status
+        old_status = status_change.get("previous").get("name")  # alter Status
 
-    new_status = status_change.get("current").get("name")  # neuer Status
-    old_status = status_change.get("previous").get("name")  # alter Status
+        if new_status != "Ready for Review":
+            return f"Status changed to {new_status}, not Ready for Review", 200
 
-    if new_status != "Ready for Review":
-        return f"Status changed to {new_status}, not Ready for Review", 200
+        # Nachricht an Discord erstellen
+        msg = {
+            "embeds": [{
+                "title": f"📝 Issue Ready for Review: {title}",
+                "description": f"[View Issue]({url})",
+                "color": 0x00FF00,
+                "fields": [
+                    {"name": "Status", "value": "Ready for Review", "inline": True}
+                ]
+            }]
+        }
 
+    position_change = changes.get("relative_position", {})
+    if not position_change:
+        return "No positional or status change", 200
+    
+    current_position = position_change.get("current")
+
+    if current_position not in relative_positions:
+        return f"Position changed to {current_position}, not Ready for Review", 200
+    
     # Nachricht an Discord erstellen
     msg = {
         "embeds": [{
@@ -38,15 +61,16 @@ def gitlab_to_discord():
             "description": f"[View Issue]({url})",
             "color": 0x00FF00,
             "fields": [
-                {"name": "Status", "value": "Ready for Review", "inline": True},
-                {"name": "Previous Status", "value": old_status, "inline": True}
+                {"name": "Status", "value": "Ready for Review", "inline": True}
             ]
         }]
     }
 
+    
     # Nachricht senden
     requests.post(DISCORD_WEBHOOK, json=msg)
     return "OK", 200
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
